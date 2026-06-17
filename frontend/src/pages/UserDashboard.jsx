@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTickets } from '../context/TicketContext';
 import { format } from 'date-fns';
-import { Eye, Inbox } from 'lucide-react';
+import { Eye, Inbox, AlertCircle } from 'lucide-react';
+import { fetchApi } from '../lib/api';
 
 const UserDashboard = () => {
-  const { tickets } = useTickets();
+  const [tickets, setTickets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        const data = await fetchApi('/tickets');
+        setTickets(data.tickets);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTickets();
+  }, []);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -15,6 +31,17 @@ const UserDashboard = () => {
       default: return 'bg-gray-100 text-gray-700';
     }
   };
+
+  if (isLoading) return <div className="py-12 text-center text-gray-500">Loading your tickets...</div>;
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
+        <AlertCircle className="w-5 h-5" />
+        <p>Error loading tickets: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -51,7 +78,7 @@ const UserDashboard = () => {
               <tbody className="divide-y divide-gray-100">
                 {tickets.map((ticket) => (
                   <tr key={ticket.id} className="hover:bg-gray-50 transition-colors group">
-                    <td className="p-4 text-sm font-mono text-gray-500">{ticket.id}</td>
+                    <td className="p-4 text-sm font-mono text-gray-500">{ticket.ticketNumber}</td>
                     <td className="p-4 text-sm font-medium text-gray-900">{ticket.title}</td>
                     <td className="p-4 text-sm text-gray-500">{ticket.category}</td>
                     <td className="p-4 text-sm">

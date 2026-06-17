@@ -24,7 +24,7 @@ const SEED_TICKETS = [
     priority: "Medium",
     description: "When I click on the billing tab, the page is blank.",
     status: "Open",
-    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(), // 1 day ago
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     messages: []
   },
   {
@@ -60,10 +60,8 @@ const SEED_TICKETS = [
 ];
 
 export const TicketProvider = ({ children }) => {
-  // Role Toggle State
   const [role, setRole] = useState('user'); 
 
-  // Initialize state from localStorage OR seed data
   const [tickets, setTickets] = useState(() => {
     const saved = localStorage.getItem('support_tickets');
     if (saved) {
@@ -77,12 +75,10 @@ export const TicketProvider = ({ children }) => {
     return SEED_TICKETS;
   });
 
-  // Sync to localStorage whenever tickets change
   useEffect(() => {
     localStorage.setItem('support_tickets', JSON.stringify(tickets));
   }, [tickets]);
 
-  // Actions
   const addTicket = (newTicket) => setTickets((prev) => [newTicket, ...prev]);
   
   const updateTicketStatus = (id, newStatus) => 
