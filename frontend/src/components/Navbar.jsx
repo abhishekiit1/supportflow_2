@@ -8,7 +8,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Show a simplified navbar if no one is logged in (e.g., on Login/Register screens)
   if (!user) {
     return (
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">

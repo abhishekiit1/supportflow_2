@@ -12,20 +12,18 @@ const ticketSchema = new mongoose.Schema({
   resolvedAt: { type: Date, default: null },
 }, { timestamps: true });
 
-// Auto-generate ticketNumber before saving a new document
-ticketSchema.pre('save', async function () { // Removed the 'next' parameter
+ticketSchema.pre('save', async function () {
   if (this.isNew) {
     try {
       const counter = await Counter.findOneAndUpdate(
         { _id: 'ticketNumber' },
         { $inc: { seq: 1 } },
-        { returnDocument: 'after', upsert: true } // Fixed the deprecation warning here
+        { returnDocument: 'after', upsert: true }
       );
-      // Format to TKT-001, TKT-042, etc.
       this.ticketNumber = `TKT-${counter.seq.toString().padStart(3, '0')}`;
     } catch (error) {
       console.error("Counter Error:", error);
-      throw error; // Use 'throw' instead of 'next(error)' in modern async hooks
+      throw error;
     }
   }
 });

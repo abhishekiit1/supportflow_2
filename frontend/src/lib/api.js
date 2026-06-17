@@ -8,7 +8,7 @@ export async function fetchApi(endpoint, options = {}) {
     ...options.headers,
   };
 
-  // Automatically attach the JWT token if the user is logged in
+  // automatically attach the jwt token if the user is logged in
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -18,7 +18,6 @@ export async function fetchApi(endpoint, options = {}) {
     headers,
   });
 
-  // Handle errors gracefully based on the Week 2 standard error shape
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Request failed with status ${response.status}`);

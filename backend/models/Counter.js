@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const counterSchema = new mongoose.Schema({
-  _id: { type: String, required: true }, // Will be 'ticketNumber'
+  _id: { type: String, required: true },
   seq: { type: Number, default: 0 }
 });
 

@@ -225,7 +225,7 @@ const TicketDetail = () => {
             ) : (
               messages.map((msg) => {
                 
-                // MONGODB ALIGNMENT LOGIC: Compare real msg.sender.id to real logged-in user.id
+                // mongodb alignment: Compare real msg.sender.id to real logged-in user.id
                 const isMyMessage = msg.sender.id === user.id;
                 
                 return (

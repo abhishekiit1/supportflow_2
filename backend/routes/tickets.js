@@ -5,37 +5,30 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// @route   GET /api/tickets
-// @desc    Get all tickets (Customer gets own, Admin gets all) with filtering/pagination
+
 router.get('/', protect, async (req, res) => {
   try {
     const { status, priority, category, search, page = 1, limit = 20 } = req.query;
     
-    // Build the query object
     const query = {};
     
-    // Role-based access: Customers only see their own tickets
     if (req.user.role === 'customer') {
       query.createdBy = req.user.userId;
     }
 
-    // Apply filters if provided
     if (status && status !== 'All') query.status = status;
     if (priority) query.priority = priority;
     if (category) query.category = category;
     
-    // Case-insensitive search on title
     if (search) {
       query.title = { $regex: search, $options: 'i' };
     }
 
-    // Pagination calculations
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Execute query
     const tickets = await Ticket.find(query)
-      .populate('createdBy', 'name email') // Bring in the user's name
-      .sort({ createdAt: -1 }) // Newest first
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -63,8 +56,6 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// @route   POST /api/tickets
-// @desc    Create a new ticket
 router.post('/', protect, async (req, res) => {
   try {
     const { title, category, priority, description } = req.body;
@@ -99,21 +90,17 @@ router.post('/', protect, async (req, res) => {
       }
     });
   } catch (error) {
-    // THIS IS THE NEW LINE WE ADDED TO UNHIDE THE DATABASE CRASH
     console.error("TICKET POST ERROR:", error); 
     res.status(500).json({ error: 'Server error creating ticket.' });
   }
 });
 
-// @route   GET /api/tickets/:id
-// @desc    Get a single ticket by ID
 router.get('/:id', protect, async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id).populate('createdBy', 'name');
 
     if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-    // Role check: Customers can only view their own tickets
     if (req.user.role === 'customer' && ticket.createdBy._id.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden: You do not own this ticket.' });
     }
@@ -138,8 +125,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   PATCH /api/tickets/:id
-// @desc    Update a ticket
 router.patch('/:id', protect, async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
@@ -147,7 +132,6 @@ router.patch('/:id', protect, async (req, res) => {
 
     const { status, category, priority } = req.body;
 
-    // Customer constraints
     if (req.user.role === 'customer') {
       if (ticket.createdBy.toString() !== req.user.userId) {
         return res.status(403).json({ error: 'Forbidden: You do not own this ticket.' });
@@ -160,16 +144,14 @@ router.patch('/:id', protect, async (req, res) => {
       }
     }
 
-    // Apply updates
     if (status) ticket.status = status;
     if (category) ticket.category = category;
     if (priority) ticket.priority = priority;
 
-    // Handle resolvedAt timestamp logic
     if (status === 'Resolved') {
       ticket.resolvedAt = new Date();
     } else if (status) {
-      ticket.resolvedAt = null; // Reset if changed away from Resolved
+      ticket.resolvedAt = null; 
     }
 
     const updatedTicket = await ticket.save();
@@ -179,8 +161,7 @@ router.patch('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   DELETE /api/tickets/:id
-// @desc    Delete a ticket and cascading messages
+
 router.delete('/:id', protect, async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
@@ -190,7 +171,6 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden: You do not own this ticket.' });
     }
 
-    // Cascading delete: remove all messages associated with this ticket
     await Message.deleteMany({ ticketId: ticket._id });
     
     await ticket.deleteOne();
@@ -201,28 +181,24 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/tickets/:id/messages
-// @desc    Get messages for a ticket (Supports polling with ?since=)
 router.get('/:id/messages', protect, async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-    // Customer ownership check
     if (req.user.role === 'customer' && ticket.createdBy.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden: You do not own this ticket.' });
     }
 
     const query = { ticketId: ticket._id };
     
-    // Polling logic: Only fetch messages newer than the provided timestamp
     if (req.query.since) {
       query.timestamp = { $gt: new Date(req.query.since) };
     }
 
     const messages = await Message.find(query)
       .populate('senderId', 'name role')
-      .sort({ timestamp: 1 }); // Oldest first (chronological order)
+      .sort({ timestamp: 1 });
 
     res.status(200).json({
       messages: messages.map(msg => ({
@@ -242,14 +218,11 @@ router.get('/:id/messages', protect, async (req, res) => {
   }
 });
 
-// @route   POST /api/tickets/:id/messages
-// @desc    Add a message to a ticket
 router.post('/:id/messages', protect, async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
 
-    // Customer ownership check
     if (req.user.role === 'customer' && ticket.createdBy.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden: You do not own this ticket.' });
     }

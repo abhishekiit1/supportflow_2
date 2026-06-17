@@ -4,16 +4,13 @@ import { protect, adminOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// @route   GET /api/admin/stats
-// @desc    Get dashboard statistics
-// @access  Private/Admin Only
+
 router.get('/stats', protect, adminOnly, async (req, res) => {
   try {
     const totalTickets = await Ticket.countDocuments();
     const openTickets = await Ticket.countDocuments({ status: 'Open' });
     const inProgressTickets = await Ticket.countDocuments({ status: 'In Progress' });
 
-    // Calculate "Resolved Today" (UTC)
     const startOfDay = new Date();
     startOfDay.setUTCHours(0, 0, 0, 0);
     const resolvedToday = await Ticket.countDocuments({
@@ -21,21 +18,18 @@ router.get('/stats', protect, adminOnly, async (req, res) => {
       resolvedAt: { $gte: startOfDay }
     });
 
-    // Aggregate Tickets by Category
     const categoryAgg = await Ticket.aggregate([
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
     const ticketsByCategory = { Hardware: 0, Software: 0, Billing: 0, Network: 0, Other: 0 };
     categoryAgg.forEach(cat => { ticketsByCategory[cat._id] = cat.count; });
 
-    // Aggregate Tickets by Status
     const statusAgg = await Ticket.aggregate([
       { $group: { _id: "$status", count: { $sum: 1 } } }
     ]);
     const ticketsByStatus = { "Open": 0, "In Progress": 0, "Resolved": 0 };
     statusAgg.forEach(stat => { ticketsByStatus[stat._id] = stat.count; });
 
-    // Calculate Tickets Over the Last 7 Days
     const ticketsOverTime = [];
     for (let i = 6; i >= 0; i--) {
       const targetDate = new Date();

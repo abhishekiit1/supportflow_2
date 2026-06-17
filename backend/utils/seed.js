@@ -3,13 +3,12 @@ import User from '../models/User.js';
 
 export const seedDatabase = async () => {
   try {
-    // Check if any users already exist
     const userCount = await User.countDocuments();
     if (userCount > 0) {
-      return; // Database is already seeded, do nothing
+      return;
     }
 
-    console.log('🌱 Database is empty. Seeding initial users...');
+    console.log('Database is empty. Seeding initial users...');
 
     const saltRounds = 10;
     const adminPassword = await bcrypt.hash('admin123', saltRounds);
@@ -21,8 +20,8 @@ export const seedDatabase = async () => {
       { name: 'Bob Smith', email: 'bob@example.com', passwordHash: userPassword, role: 'customer' }
     ]);
 
-    console.log('✅ Seed users injected successfully!');
+    console.log('Seed users injected successfully!');
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error('Error seeding database:', error);
   }
 };

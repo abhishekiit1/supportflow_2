@@ -3,11 +3,9 @@ import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Contexts & Auth
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Layout & Pages
 import MainLayout from './layouts/MainLayout';
 import UserDashboard from './pages/UserDashboard';
 import CreateTicket from './pages/CreateTicket';
@@ -21,18 +19,18 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<MainLayout />}>
       
-      {/* Public Routes */}
+      {/* login routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected Routes (Customers & Admins) */}
+      {/* customer and admin routes*/}
       <Route element={<ProtectedRoute />}>
         <Route index element={<UserDashboard />} />
         <Route path="/tickets/new" element={<CreateTicket />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
       </Route>
 
-      {/* Protected Admin-Only Routes */}
+      {/* admin only routes */}
       <Route element={<ProtectedRoute requireAdmin={true} />}>
         <Route path="/admin" element={<AdminDashboard />} />
       </Route>

@@ -16,7 +16,7 @@ const Register = () => {
     try {
       await register(name, email, password);
       toast.success('Registration successful!');
-      navigate('/'); // New users are always customers
+      navigate('/'); // new users are always customers
     } catch (err) {
       toast.error(err.message);
     }

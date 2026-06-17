@@ -5,14 +5,13 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // True while checking token on refresh
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('auth_token');
       if (token) {
         try {
-          // Verify token with backend
           const data = await fetchApi('/auth/me');
           setUser(data);
         } catch (err) {
